@@ -58,13 +58,13 @@ app.use(authMiddleware); // Attach user info to request if authenticated
 app.use(
   '/graphql',
   graphqlHTTP((req) => ({
-    schema: schema,
+    schema: schema,                    // This is your GraphQL schema.
     rootValue: resolvers,
-    context: {
+    context: {                          //Anything placed in context becomes available inside all resolvers.
       user: req.user,
       isAuthenticated: req.isAuthenticated,
     },
-    graphiql: process.env.NODE_ENV === 'development', // Enable GraphiQL in development
+    graphiql: process.env.NODE_ENV === 'development', // GraphiQL is a browser-based GraphQL playground.
     customFormatErrorFn: (error) => ({
       message: error.message,
       locations: error.locations,

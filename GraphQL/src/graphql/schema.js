@@ -23,9 +23,6 @@ const { buildSchema } = require('graphql');
  */
 
 const schema = buildSchema(`
-  """
-  User type representing a registered user
-  """
   type User {
     _id: ID!
     name: String!
@@ -34,27 +31,17 @@ const schema = buildSchema(`
     updatedAt: String!
   }
 
-  """
-  Authentication payload returned after login/register
-  Contains user information and JWT token
-  """
   type AuthPayload {
     user: User!
     token: String!
   }
 
-  """
-  Order item representing a product in an order
-  """
   type OrderItem {
     productName: String!
     quantity: Int!
     price: Float!
   }
 
-  """
-  Shipping address for order delivery
-  """
   type ShippingAddress {
     street: String!
     city: String!
@@ -63,9 +50,6 @@ const schema = buildSchema(`
     country: String!
   }
 
-  """
-  Order type representing a customer order
-  """
   type Order {
     _id: ID!
     user: User!
@@ -77,18 +61,12 @@ const schema = buildSchema(`
     updatedAt: String!
   }
 
-  """
-  Input type for order items
-  """
   input OrderItemInput {
     productName: String!
     quantity: Int!
     price: Float!
   }
 
-  """
-  Input type for shipping address
-  """
   input ShippingAddressInput {
     street: String!
     city: String!
@@ -97,153 +75,356 @@ const schema = buildSchema(`
     country: String!
   }
 
-  """
-  Root Query type - Read operations
-  """
   type Query {
-    # User Queries
-    """
-    Get user by ID
-    Requires authentication
-    """
     user(id: ID!): User
-
-    """
-    Get all users with pagination
-    Requires authentication
-    """
     users(limit: Int, skip: Int): [User!]!
-
-    """
-    Get currently authenticated user
-    Requires authentication
-    """
     me: User
-
-    # Order Queries
-    """
-    Get order by ID
-    Requires authentication - users can only view their own orders
-    """
     order(id: ID!): Order
-
-    """
-    Get all orders for the authenticated user
-    Requires authentication
-    """
     myOrders(limit: Int, skip: Int): [Order!]!
-
-    """
-    Get all orders (admin function)
-    Requires authentication
-    """
     orders(limit: Int, skip: Int): [Order!]!
-
-    """
-    Get orders filtered by status
-    Requires authentication
-    """
     ordersByStatus(status: String!, limit: Int, skip: Int): [Order!]!
   }
 
-  """
-  Root Mutation type - Write operations
-  """
   type Mutation {
-    # User Mutations
-    """
-    Register a new user account
-    Returns user information and JWT token
-    
-    Example input:
-    {
-      name: "John Doe",
-      email: "john@example.com",
-      password: "password123"
-    }
-    """
     register(name: String!, email: String!, password: String!): AuthPayload!
-
-    """
-    Login with email and password
-    Returns user information and JWT token
-    
-    Example input:
-    {
-      email: "john@example.com",
-      password: "password123"
-    }
-    """
     login(email: String!, password: String!): AuthPayload!
-
-    """
-    Update user information
-    Requires authentication - users can only update their own profile
-    
-    Example input:
-    {
-      id: "507f1f77bcf86cd799439011",
-      name: "Jane Doe"
-    }
-    """
     updateUser(id: ID!, name: String, email: String): User!
-
-    """
-    Delete user account
-    Requires authentication - users can only delete their own account
-    """
     deleteUser(id: ID!): User!
-
-    # Order Mutations
-    """
-    Create a new order
-    Requires authentication
-    
-    Example input:
-    {
-      items: [
-        { productName: "Laptop", quantity: 1, price: 999.99 },
-        { productName: "Mouse", quantity: 2, price: 25.50 }
-      ],
-      shippingAddress: {
-        street: "123 Main St",
-        city: "New York",
-        state: "NY",
-        zipCode: "10001",
-        country: "USA"
-      }
-    }
-    """
     createOrder(items: [OrderItemInput!]!, shippingAddress: ShippingAddressInput!): Order!
-
-    """
-    Update order status
-    Requires authentication - users can only update their own orders
-    Valid statuses: pending, processing, shipped, delivered, cancelled
-    
-    Example input:
-    {
-      id: "507f1f77bcf86cd799439012",
-      status: "shipped"
-    }
-    """
     updateOrderStatus(id: ID!, status: String!): Order!
-
-    """
-    Cancel an order
-    Requires authentication - users can only cancel their own orders
-    Cannot cancel orders that are already shipped or delivered
-    """
     cancelOrder(id: ID!): Order!
-
-    """
-    Delete an order (admin function)
-    Requires authentication
-    """
     deleteOrder(id: ID!): Order!
   }
 `);
 
 module.exports = schema;
+
+// Order! => order type is return type and ! means it wont be null 
+// [Order!]! => array of  Orders (not null) type, and the array is not null
+/**
+ * SCHEMA DOCUMENTATION
+ * ====================
+ *
+ * TYPES:
+ * ------
+ *
+ * User:
+ * - User type representing a registered user
+ * - Fields: _id, name, email, createdAt, updatedAt
+ *
+ * AuthPayload:
+ * - Authentication payload returned after login/register
+ * - Contains user information and JWT token
+ * - Fields: user (User), token (String)
+ *
+ * OrderItem:
+ * - Order item representing a product in an order
+ * - Fields: productName, quantity, price
+ *
+ * ShippingAddress:
+ * - Shipping address for order delivery
+ * - Fields: street, city, state, zipCode, country
+ *
+ * Order:
+ * - Order type representing a customer order
+ * - Fields: _id, user, items, totalAmount, status, shippingAddress, createdAt, updatedAt
+ *
+ * OrderItemInput:
+ * - Input type for order items
+ * - Fields: productName, quantity, price
+ *
+ * ShippingAddressInput:
+ * - Input type for shipping address
+ * - Fields: street, city, state, zipCode, country
+ *
+ *
+ * QUERIES:
+ * --------
+ *
+ * User Queries:
+ *
+ * 1. user(id: ID!): User
+ *    - Get user by ID
+ *    - Requires authentication
+ *    - Example:
+ *      query {
+ *        user(id: "507f1f77bcf86cd799439011") {
+ *          _id
+ *          name
+ *          email
+ *          createdAt
+ *          updatedAt
+ *        }
+ *      }
+ *
+ * 2. users(limit: Int, skip: Int): [User!]!
+ *    - Get all users with pagination
+ *    - Requires authentication
+ *    - Example:
+ *      query {
+ *        users(limit: 10, skip: 0) {
+ *          _id
+ *          name
+ *          email
+ *          createdAt
+ *        }
+ *      }
+ *
+ * 3. me: User
+ *    - Get currently authenticated user
+ *    - Requires authentication
+ *    - Example:
+ *      query {
+ *        me {
+ *          _id
+ *          name
+ *          email
+ *          createdAt
+ *          updatedAt
+ *        }
+ *      }
+ *
+ * Order Queries:
+ *
+ * 4. order(id: ID!): Order
+ *    - Get order by ID
+ *    - Requires authentication - users can only view their own orders
+ *    - Example:
+ *      query {
+ *        order(id: "507f1f77bcf86cd799439012") {
+ *          _id
+ *          user {
+ *            _id
+ *            name
+ *            email
+ *          }
+ *          items {
+ *            productName
+ *            quantity
+ *            price
+ *          }
+ *          totalAmount
+ *          status
+ *          shippingAddress {
+ *            street
+ *            city
+ *            state
+ *            zipCode
+ *            country
+ *          }
+ *          createdAt
+ *          updatedAt
+ *        }
+ *      }
+ *
+ * 5. myOrders(limit: Int, skip: Int): [Order!]!
+ *    - Get all orders for the authenticated user
+ *    - Requires authentication
+ *    - Example:
+ *      query {
+ *        myOrders(limit: 5, skip: 0) {
+ *          _id
+ *          items {
+ *            productName
+ *            quantity
+ *            price
+ *          }
+ *          totalAmount
+ *          status
+ *          createdAt
+ *        }
+ *      }
+ *
+ * 6. orders(limit: Int, skip: Int): [Order!]!
+ *    - Get all orders (admin function)
+ *    - Requires authentication
+ *    - Example:
+ *      query {
+ *        orders(limit: 20, skip: 0) {
+ *          _id
+ *          user {
+ *            _id
+ *            name
+ *            email
+ *          }
+ *          totalAmount
+ *          status
+ *          createdAt
+ *        }
+ *      }
+ *
+ * 7. ordersByStatus(status: String!, limit: Int, skip: Int): [Order!]!
+ *    - Get orders filtered by status
+ *    - Requires authentication
+ *    - Example:
+ *      query {
+ *        ordersByStatus(status: "pending", limit: 10, skip: 0) {
+ *          _id
+ *          user {
+ *            name
+ *            email
+ *          }
+ *          totalAmount
+ *          status
+ *          createdAt
+ *        }
+ *      }
+ *
+ *
+ * MUTATIONS:
+ * ----------
+ *
+ * User Mutations:
+ *
+ * 1. register(name: String!, email: String!, password: String!): AuthPayload!
+ *    - Register a new user account
+ *    - Returns user information and JWT token
+ *    - Example:
+ *      mutation {
+ *        register(
+ *          name: "John Doe"
+ *          email: "john@example.com"
+ *          password: "password123"
+ *        ) {
+ *          user {
+ *            _id
+ *            name
+ *            email
+ *            createdAt
+ *          }
+ *          token
+ *        }
+ *      }
+ *
+ * 2. login(email: String!, password: String!): AuthPayload!
+ *    - Login with email and password
+ *    - Returns user information and JWT token
+ *    - Example:
+ *      mutation {
+ *        login(
+ *          email: "john@example.com"
+ *          password: "password123"
+ *        ) {
+ *          user {
+ *            _id
+ *            name
+ *            email
+ *          }
+ *          token
+ *        }
+ *      }
+ *
+ * 3. updateUser(id: ID!, name: String, email: String): User!
+ *    - Update user information
+ *    - Requires authentication - users can only update their own profile
+ *    - Example:
+ *      mutation {
+ *        updateUser(
+ *          id: "507f1f77bcf86cd799439011"
+ *          name: "Jane Doe"
+ *          email: "jane@example.com"
+ *        ) {
+ *          _id
+ *          name
+ *          email
+ *          updatedAt
+ *        }
+ *      }
+ *
+ * 4. deleteUser(id: ID!): User!
+ *    - Delete user account
+ *    - Requires authentication - users can only delete their own account
+ *    - Example:
+ *      mutation {
+ *        deleteUser(id: "507f1f77bcf86cd799439011") {
+ *          _id
+ *          name
+ *          email
+ *        }
+ *      }
+ *
+ * Order Mutations:
+ *
+ * 5. createOrder(items: [OrderItemInput!]!, shippingAddress: ShippingAddressInput!): Order!
+ *    - Create a new order
+ *    - Requires authentication
+ *    - Example:
+ *      mutation {
+ *        createOrder(
+ *          items: [
+ *            { productName: "Laptop", quantity: 1, price: 999.99 }
+ *            { productName: "Mouse", quantity: 2, price: 25.50 }
+ *          ]
+ *          shippingAddress: {
+ *            street: "123 Main St"
+ *            city: "New York"
+ *            state: "NY"
+ *            zipCode: "10001"
+ *            country: "USA"
+ *          }
+ *        ) {
+ *          _id
+ *          user {
+ *            _id
+ *            name
+ *          }
+ *          items {
+ *            productName
+ *            quantity
+ *            price
+ *          }
+ *          totalAmount
+ *          status
+ *          shippingAddress {
+ *            street
+ *            city
+ *            state
+ *            zipCode
+ *            country
+ *          }
+ *          createdAt
+ *        }
+ *      }
+ *
+ * 6. updateOrderStatus(id: ID!, status: String!): Order!
+ *    - Update order status
+ *    - Requires authentication - users can only update their own orders
+ *    - Valid statuses: pending, processing, shipped, delivered, cancelled
+ *    - Example:
+ *      mutation {
+ *        updateOrderStatus(
+ *          id: "507f1f77bcf86cd799439012"
+ *          status: "shipped"
+ *        ) {
+ *          _id
+ *          status
+ *          updatedAt
+ *        }
+ *      }
+ *
+ * 7. cancelOrder(id: ID!): Order!
+ *    - Cancel an order
+ *    - Requires authentication - users can only cancel their own orders
+ *    - Cannot cancel orders that are already shipped or delivered
+ *    - Example:
+ *      mutation {
+ *        cancelOrder(id: "507f1f77bcf86cd799439012") {
+ *          _id
+ *          status
+ *          updatedAt
+ *        }
+ *      }
+ *
+ * 8. deleteOrder(id: ID!): Order!
+ *    - Delete an order (admin function)
+ *    - Requires authentication
+ *    - Example:
+ *      mutation {
+ *        deleteOrder(id: "507f1f77bcf86cd799439012") {
+ *          _id
+ *          status
+ *        }
+ *      }
+ */
 
 // Made with Bob
